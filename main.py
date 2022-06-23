@@ -120,8 +120,11 @@ while cycle:
             image_preview_link = i.find('a')['href']
             download_in_dir(pth, image_preview_link, n)
             n += 1
-        if len(images_container.find_all('article', class_="thumbnail-preview")):
-                print("downloaded all images. Good luck.")
+        if len(images_container.find_all('article', class_="thumbnail-preview")) == 0:
+                if n == 0:
+                    print("No images found by your task")
+                else:
+                    print("downloaded all images. Good luck.")
                 quit()
 
     pid += 42
