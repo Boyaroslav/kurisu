@@ -13,7 +13,7 @@ print("Hello, this is anime images parser")
 for i in argv:
     pass
 
-good_thing = {";" : "%3B", ":":"%3a", ",":"%2c", "%":"%25"}
+good_thing = {";" : "%3B", ":":"%3a", ",":"%2c", "%":"%25", "+":"%2B", "#":"%23"}
 
 
 chunk_size = 512 * 1024  # to download normally
@@ -51,7 +51,12 @@ count = int(input("how many images do you need to download? (-2 to one page/ -1 
 
 output_path = input(f"in which directory should we place the folder '{task}' with the result?   ")
 
-pth = os.path.join(output_path, tas_spl)
+if output_path == "":
+    output_path = __file__
+
+pth = os.path.join(os.path.dirname(output_path), tas_spl)
+
+print("downloading path:  " + pth)
 
 #  creating dir
 if not (os.path.exists(pth)):
@@ -64,8 +69,8 @@ im_sess.headers['LANGUAGE'] = LANGUAGE
 
 
 def download_in_dir(path, link, num):
-    print("link:", link)
-    time.sleep(1)
+
+    #time.sleep(0.5)
     image_page = BeautifulSoup(im_sess.get(link).content, 'lxml')
     im_name = tas_spl + f" [{num}]"
     main_ = image_page.find('div', class_="mainBodyPadding")
@@ -74,7 +79,7 @@ def download_in_dir(path, link, num):
         download_link = str(main_.find('picture').find("img")["src"])
     except:
         download_link = str(main_.find('video').find("source")["src"])
-    print(f"downloading   {download_link}", end="")
+    print(f"{num} // downloading   {download_link}", end="")
 
     down_req = requests.get(download_link)
     res = download_link[len(download_link) - download_link[::-1].index('.')::]
@@ -87,7 +92,8 @@ def download_in_dir(path, link, num):
 
 
 
-pid = 0 # every page pid + 42 (больше становится нахуй пошел)
+pid = 0 # every page pid + 42 надо смириться
+
 n = 0
 
 if count == -1:
@@ -98,7 +104,7 @@ else:
     cycle = (n < count)
 
 while cycle:
-    time.sleep(1)
+    #time.sleep(0.5)
     link = str(config["example_link"] + tas_spl + "&pid=" + str(pid))
     request = sess.get(link)
     if request.status_code != 200:
@@ -115,11 +121,23 @@ while cycle:
         quit()
     else:
         for i in images_container.find_all('article', class_="thumbnail-preview"):
+            if count == -1:
+                cycle = True
+            elif count == -2:
+                cycle = (pid == 0)
+            else:
+                cycle = (n < count)
+            if not cycle:
+                if count == -2:
+                    print(f"one page downloaded. Good luck.")
+                else:
+                    print(f"{count} images downloaded. Good luck!")
+                quit()
 
-            time.sleep(1)
             image_preview_link = i.find('a')['href']
             download_in_dir(pth, image_preview_link, n)
             n += 1
+
         if len(images_container.find_all('article', class_="thumbnail-preview")) == 0:
                 if n == 0:
                     print("No images found by your task")
